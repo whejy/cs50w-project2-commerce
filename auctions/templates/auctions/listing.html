@@ -11,6 +11,8 @@
     <b>{{ bid_label }}</b>${{ bid }}
     <br><br>
     {{ listing.description }}
+    <br><br>
+    {{ listing.ending }}
     <br>
     {% if user.is_authenticated %}
         {% if not winning %}
@@ -38,7 +40,7 @@
             </form>
         {% endif %}       
     {% else %}
-    {{ message }}     
+        {{ message }}     
     {% endif %}
 </div>
 {% endblock %}

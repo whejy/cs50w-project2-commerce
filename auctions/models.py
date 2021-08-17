@@ -1,5 +1,8 @@
 from django.contrib.auth.models import AbstractUser
+from django.utils.html import format_html
 from django.db import models
+from datetime import datetime, timedelta, timezone
+from .settings import LENGTH
 
 
 class User(AbstractUser):
@@ -31,9 +34,32 @@ class Listing(models.Model):
     sold = models.BooleanField(
         default=False
         )
+    date = models.DateTimeField(
+        auto_now_add=True
+    )
     
+
+    @property
+    def ending(self):
+        end_date = self.date.replace(
+            microsecond=0,
+            tzinfo=None
+            ) + timedelta(days=LENGTH)
+        todays_date = datetime.now(timezone.utc).replace(
+            microsecond=0,
+            tzinfo=None
+            )
+        end = end_date - todays_date
+        if self.sold is False:
+            if end:
+                endmsg = format_html(f"<b>Auction Ends:</b> {end_date} <i>({end} hours)</i>")
+        else:
+            endmsg = ""
+        return endmsg
+
+
     def __str__(self):
-        return f"{self.id}: {self.title}, {self.description}, {self.start_bid}, {self.image}, {self.category}"
+        return f"{self.id}: {self.title}, {self.description}, {self.start_bid}, {self.image}, {self.category}, Sold = {self.sold}, {self.date}"
 
 
 class Bids(models.Model):

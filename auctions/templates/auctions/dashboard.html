@@ -1,13 +1,13 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-<h2>Dashboard</h2>
+<h2>{{ title }}</h2>
 <br>
 {% for key, value_list in data.items %}
     {% if value_list %}
     <h3>{{ key }}</h3>
         {% for listing in value_list %}
-        <a href="{% url 'listing' listing_id=listing.id %}">
+            <a href="{% url 'listing' listing_id=listing.id %}">
             <h3>{{ listing.title }}</h3>
             </a>
             <div class="listing">
@@ -18,7 +18,11 @@
                         </a>
                     </div>
                 {% endif %}
-                <b>Current Bid: </b>${{ listing.start_bid }}
+                <b>{% if key == "Sold" or key == 'Won'%}Final Bid:
+                {% else %}Current Bid: 
+                {% endif %}
+                </b>
+                ${{ listing.start_bid }}                
                 <br><br>
                 {{ listing.description }}
                 <br><br>
@@ -26,4 +30,7 @@
         {% endfor %}
     {% endif %}
 {% endfor %}
+{% if message %}
+    {{ message|safe }}
+{% endif %}
 {% endblock %}

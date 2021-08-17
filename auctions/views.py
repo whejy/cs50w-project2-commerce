@@ -13,7 +13,7 @@ from .models import User, Listing, Bids, Comments, Watchlist, Winners
 from .settings import STEP, CATEGORIES
 
 
-@login_required(login_url="/bid")
+@login_required(login_url="/login")
 def bid(request):
     form = NewBidForm(request.POST)
     if form.is_valid():
@@ -44,11 +44,15 @@ def categories(request):
 def category(request, category):
     empty = ""
     lst = []
+    active_listings = []
     items = Listing.objects.filter(category=category)
-    if not items:
+    for item in items:
+        if not Winners.objects.filter(item=Listing(id=item.id)):
+            active_listings.append(item)
+    if not active_listings:
         empty = f"Sorry, there are currently no listings in the '{category}' category."
     else:
-        lst = bidUpdate(items)
+        lst = bidUpdate(active_listings)
     return render(request, "auctions/category.html", {
         "items": lst,
         "category": category,
@@ -57,11 +61,13 @@ def category(request, category):
 
 
 # Display listings the user is winning, has won, or has bid on but not currently winning
-@login_required
+@login_required(login_url="/login")
 def dashboard(request):
     won = []
     winning = []
     not_winning = []
+    msg = ""
+    title = "Dashboard"
     user = request.user
     items_won = Winners.objects.filter(
         winner=user,
@@ -103,8 +109,15 @@ def dashboard(request):
         "Not Winning": not_winning
         }
 
+    if not winning:
+        if not won:
+            if not not_winning:
+                msg = "Get bidding!"
+
     return render(request, "auctions/dashboard.html", {
-        "data": data
+        "data": data,
+        "title": title,
+        "message": msg
     })
 
 
@@ -178,6 +191,8 @@ def listing(request, listing_id):
         if closed:
             bid_label = "Final Bid: "
             msg = "You have closed this auction."
+            if winner:
+                msg = f"Congratulations, your listing sold for ${current_bid}!"
         else:
             close = "True"
             watchlist = "Close listing"
@@ -192,7 +207,7 @@ def listing(request, listing_id):
     if high_bidder == user:
         winning = "True"
         if winner:
-            bid_label = "Winning Bid: "
+            bid_label = "Final Bid: "
             msg = "Congratulations, you won this auction!"
         else:
             bid_label = "Your Bid: "
@@ -240,12 +255,13 @@ def logout_view(request):
 
 
 # Display user's selling list and allow sellerr to close listing
-@login_required(login_url='/mylistings')
+@login_required(login_url="/login")
 def mylistings(request):
-    user = request.user
-    items = Listing.objects.filter(seller=user)
     active = []
     sold = []
+    msg = ""
+    user = request.user
+    items = Listing.objects.filter(seller=user)    
     if request.method == "POST":
         # Close listing
         listing_id = request.POST.get("listing_id")
@@ -285,17 +301,23 @@ def mylistings(request):
                 sold.append(item)
         active = bidUpdate(active)
         sold = bidUpdate(sold)
+        if not active:
+            if not sold:
+                msg = "Start <a href=/new>selling</a> today!"
         data = {
             "Active Listings": active,
             "Sold": sold
         }
-        return render(request, "auctions/mylistings.html", {
-            "data": data
+        title = "My Listings"
+        return render(request, "auctions/dashboard.html", {
+            "data": data,
+            "title": title,
+            "message": msg
         })
 
 
 # Allows user to create a new listing
-@login_required(login_url='/login')
+@login_required(login_url="/login")
 def new(request):
     if request.method == "POST":
         form = NewListForm(request.POST)
@@ -306,6 +328,11 @@ def new(request):
             start_bid = form.cleaned_data["start_bid"]
             category = request.POST.get("category")
             image = form.cleaned_data["image"]
+            if category not in CATEGORIES:
+                messages.error(request, 
+                "Sorry, you have selected an invalid category."
+                )
+                HttpResponseRedirect(reverse("new"))
             if not image:
                 image="https://us.123rf.com/450wm/pavelstasevich/pavelstasevich1811/pavelstasevich181101028/112815904-no-image-available-icon-flat-vector-illustration.jpg?ver=6"
                 
@@ -355,7 +382,7 @@ def register(request):
 
 
 # Displays user's watchlist and handles adding/ removing behaviour
-@login_required(login_url='/login')
+@login_required(login_url="/login")
 def watchlist(request):
     user = request.user.id
     if request.method == "POST":
