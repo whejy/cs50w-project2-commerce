@@ -38,7 +38,21 @@
             <input type="hidden" value="{{ remove }}" name="remove">
             <input type="submit" value="{{ watchlist }}">
             </form>
-        {% endif %}       
+        {% endif %}
+        <br>
+        {% for comment in listing.comments.all %}
+            <b>{{ comment.user }}</b> said...
+            <br>
+            {{ comment.comment }}<br>
+            (<i>{{ comment.date }}</i>)
+            <br><br>
+        {% endfor %}        
+        <form action="{% url 'listing' listing.id %}" method="POST">
+            {% csrf_token %}
+            {{ commentform }}
+            <input type="hidden" value="{{ listing.id }}" name="listing_id">
+            <input type="submit" value="Add Comment">
+        </form>
     {% else %}
         {{ message }}     
     {% endif %}

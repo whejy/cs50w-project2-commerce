@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from decimal import Decimal
 
-from .forms import NewListForm, NewBidForm
+from .forms import NewListForm, NewBidForm, NewCommentForm
 from .helpers import bidCheck, bidUpdate, unique
 from .models import User, Listing, Bids, Comments, Watchlist, Winners
 from .settings import STEP, CATEGORIES
@@ -22,9 +22,7 @@ def bid(request):
         current_bid = bidCheck(listing_id)[0]
         if bid > current_bid:
             new_bid = Bids(
-                user=User(id=request.user.id),
-                item=Listing(id=listing_id),
-                bid=bid
+                user=User(id=request.user.id), item=Listing(id=listing_id), bid=bid
             )
             new_bid.save()
             messages.success(request, "Congratulations, you are the highest bidder!")
@@ -73,7 +71,7 @@ def dashboard(request):
         winner=user,
     )
     bidded = Bids.objects.filter(
-        user=User(id=request.user.id)
+        user=User(id=user.id)
     )
     # If auction bidded on, but not won, update bid price and display to user
     if bidded:
@@ -150,83 +148,95 @@ def index(request):
 
 # Retreive listing and determine watchlist-button display
 def listing(request, listing_id):
-    msg = ""
-    remove = ""
-    close = ""
-    winning = ""
-    watchlist = ""
-    bid_label = "Current Bid: "
     user = request.user.id
-    current_bid = bidCheck(listing_id)[0]
-    # Catch for user accessing invalid listing via URL bar
-    if current_bid == None:
-        return HttpResponseRedirect(reverse("index"))
-
-    form = NewBidForm(initial={
-        'bid': STEP + float(current_bid)
-        })
-    in_watchlist = Watchlist.objects.filter(
-        user=User(id=user),
-        item=Listing(id=listing_id)
-        )
-    sellers_item = Listing.objects.filter(
-        seller=User(id=user),
-        id=listing_id
-        )
-
-    try:
-        high_bidder = User.objects.get(username=bidCheck(listing_id)[1]).id
-    except User.DoesNotExist:
-        high_bidder = None
-    try:
-        closed = Winners.objects.get(item=Listing(id=listing_id))
-    except Winners.DoesNotExist:
-        closed = None
-    try:
-        winner = Winners.objects.get(item=Listing(id=listing_id))
-    except Winners.DoesNotExist:
-        winner = None
-
-    if sellers_item:
-        if closed:
-            bid_label = "Final Bid: "
-            msg = "You have closed this auction."
-            if winner:
-                msg = f"Congratulations, your listing sold for ${current_bid}!"
-        else:
-            close = "True"
-            watchlist = "Close listing"
-    elif in_watchlist:
-        remove = "True"
-        watchlist = "Remove from Watchlist"
+    if request.method == "POST":
+        form = NewCommentForm(request.POST)
+        if form.is_valid():
+            comment = form.cleaned_data['comment']
+            listing_id = request.POST.get("listing_id")
+            new_comment = Comments(
+                user=User(id=user), item=Listing(id=listing_id), comment=comment
+            )
+            new_comment.save()
+            messages.success(request, "Comment Added!")
+        return HttpResponseRedirect(f"listing{listing_id}")
     else:
-        if closed:
-            msg = "Sorry, this auction has ended."
-        else:
-            watchlist = "Add to Watchlist" 
-    if high_bidder == user:
-        winning = "True"
-        if winner:
-            bid_label = "Final Bid: "
-            msg = "Congratulations, you won this auction!"
-        else:
-            bid_label = "Your Bid: "
-            msg = "You are the current the highest bidder!"
-    if user == None:
+        msg = ""
+        remove = ""
+        close = ""
+        winning = ""
+        watchlist = ""
         bid_label = "Current Bid: "
-        msg = "You must be logged in to bid."
-    return render(request, "auctions/listing.html", {
-        "close": close,
-        "closed": closed,
-        "message": msg,
-        "remove" : remove,
-        "watchlist": watchlist,
-        "winning": winning,
-        "form": form,
-        "bid": current_bid,
-        "bid_label": bid_label,
-        "listing": Listing.objects.get(id=listing_id)
-    })
+        current_bid = bidCheck(listing_id)[0]
+        # Catch for user accessing invalid listing via URL bar
+        if current_bid == None:
+            return HttpResponseRedirect(reverse("index"))
+
+        commentForm = NewCommentForm()
+        bidForm = NewBidForm(initial={
+            'bid': STEP + float(current_bid)
+        })
+        in_watchlist = Watchlist.objects.filter(
+            user=User(id=user), item=Listing(id=listing_id)
+        )
+        sellers_item = Listing.objects.filter(
+            seller=User(id=user), id=listing_id
+        )
+
+        try:
+            high_bidder = User.objects.get(username=bidCheck(listing_id)[1]).id
+        except User.DoesNotExist:
+            high_bidder = None
+        try:
+            closed = Winners.objects.get(item=Listing(id=listing_id))
+        except Winners.DoesNotExist:
+            closed = None
+        try:
+            winner = Winners.objects.get(item=Listing(id=listing_id))
+        except Winners.DoesNotExist:
+            winner = None
+
+        if sellers_item:
+            if closed:
+                bid_label = "Final Bid: "
+                msg = "You have closed this auction."
+                if winner:
+                    msg = f"Congratulations, your listing sold for ${current_bid}!"
+            else:
+                close = "True"
+                watchlist = "Close listing"
+        elif in_watchlist:
+            remove = "True"
+            watchlist = "Remove from Watchlist"
+        else:
+            if closed:
+                msg = "Sorry, this auction has ended."
+            else:
+                watchlist = "Add to Watchlist" 
+        if high_bidder == user:
+            winning = "True"
+            if winner:
+                bid_label = "Final Bid: "
+                msg = "Congratulations, you won this auction!"
+            else:
+                bid_label = "Your Bid: "
+                msg = "You are the current the highest bidder!"
+        if user == None:
+            bid_label = "Current Bid: "
+            msg = "You must be logged in to bid."
+        return render(request, "auctions/listing.html", {
+            "close": close,
+            "closed": closed,
+            "message": msg,
+            "remove" : remove,
+            "watchlist": watchlist,
+            "winning": winning,
+            "form": bidForm,
+            "commentform": commentForm,
+            "bid": current_bid,
+            "bid_label": bid_label,
+            "listing": Listing.objects.get(id=listing_id)
+        })
 
 
 def login_view(request):
@@ -271,10 +281,7 @@ def mylistings(request):
         if winner:
             cost = bidCheck(listing_id)[0]
             won = Winners(
-                owner=seller,
-                item=Listing(id=listing_id),
-                winner=winner,
-                cost=cost
+                owner=seller, item=Listing(id=listing_id), winner=winner, cost=cost
             )
             item.sold = True
             won.save()
@@ -328,7 +335,7 @@ def new(request):
             start_bid = form.cleaned_data["start_bid"]
             category = request.POST.get("category")
             image = form.cleaned_data["image"]
-            if category not in CATEGORIES:
+            if category and category not in CATEGORIES:
                 messages.error(request, 
                 "Sorry, you have selected an invalid category."
                 )
@@ -337,14 +344,11 @@ def new(request):
                 image="https://us.123rf.com/450wm/pavelstasevich/pavelstasevich1811/pavelstasevich181101028/112815904-no-image-available-icon-flat-vector-illustration.jpg?ver=6"
                 
             new_listing = Listing(
-                seller=User(id=user),
-                title=title,
-                description=description,
-                start_bid=start_bid,
-                image=image,
-                category=category
-                )
+                seller=User(id=user), title=title, description=description,
+                start_bid=start_bid, image=image, category=category
+            )
             new_listing.save()
+            messages.success(request, f"You listed an auction for {title}!")
             return HttpResponseRedirect(reverse("index"))
     else:
         form = NewListForm()
