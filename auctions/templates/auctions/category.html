@@ -4,7 +4,9 @@
 
 {% block body %}
 {% if empty %}
-    {{ empty }}
+<div class="center">
+    <br><br>{{ empty|safe }}
+</div>
 {% endif %}
 <ul class="no-bullets">
 {% for listing in items %}
@@ -20,9 +22,12 @@
             <div class="grid-itemtext">
                 <h3><a href="{% url 'listing' listing_id=listing.id %}">
                     {{ listing.title }}
-                </a></h3>
+                </a></h3><br>
                     <b>Current Bid: </b>${{ listing.start_bid }}<br><br>
-                    {{ listing.description }}
+                    {{ listing.description }}<br>
+                    <div class="footer">
+                        Listed on {{ listing.date }}
+                    </div>                    
             </div>                  
         </div>
     </li>

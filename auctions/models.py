@@ -12,20 +12,25 @@ class User(AbstractUser):
 
 class Listing(models.Model):
     seller = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="listings"
+        User, on_delete=models.CASCADE,
+        related_name="listings"
     )
     title = models.CharField(
         max_length=64
     )
     description = models.TextField()
     start_bid = models.DecimalField(
-        max_digits=8, decimal_places=2
+        max_digits=8,
+        decimal_places=2
     )
     image = models.URLField(
-        null=True, default="https://us.123rf.com/450wm/pavelstasevich/pavelstasevich1811/pavelstasevich181101028/112815904-no-image-available-icon-flat-vector-illustration.jpg?ver=6"
+        null=True,
+        default="https://us.123rf.com/450wm/pavelstasevich/pavelstasevich1811/pavelstasevich181101028/112815904-no-image-available-icon-flat-vector-illustration.jpg?ver=6"
     )
     category = models.CharField(
-        max_length=64, null=True, blank=True
+        max_length=64,
+        null=True,
+        blank=True
     )
     sold = models.BooleanField(
         default=False
@@ -38,10 +43,11 @@ class Listing(models.Model):
     @property
     def ending(self):
         end_date = self.date.replace(
-            microsecond=0, tzinfo=None
-        ) + timedelta(days=LENGTH)
+            microsecond=0,
+            tzinfo=None) + timedelta(days=LENGTH)
         todays_date = datetime.now(timezone.utc).replace(
-            microsecond=0, tzinfo=None
+            microsecond=0,
+            tzinfo=None
         )
         end = end_date - todays_date
         if self.sold is False:
@@ -64,7 +70,10 @@ class Bids(models.Model):
         Listing, on_delete=models.CASCADE
     )
     bid = models.DecimalField(
-        max_digits=8, decimal_places=2, null=True, blank=True
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True
     )
 
     def __str__(self):
@@ -91,16 +100,23 @@ class Watchlist(models.Model):
 
 class Winners(models.Model):
     owner = models.CharField(
-        max_length=64, null=True, blank=True
+        max_length=64,
+        null=True,
+        blank=True
     )
     item = models.ForeignKey(
         Listing, on_delete=models.CASCADE
     )
     winner = models.CharField(
-        max_length=64, null=True, blank=True
+        max_length=64,
+        null=True,
+        blank=True
     )
     cost = models.DecimalField(
-        max_digits=8, decimal_places=2, null=True, blank=True
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True
     )
     notified = models.BooleanField(
         default=False
@@ -115,13 +131,18 @@ class Comments(models.Model):
         User, on_delete=models.CASCADE
     )
     item = models.ForeignKey(
-        Listing, on_delete=models.CASCADE, null=True, blank=True, related_name="comments"
+        Listing, on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="comments"
     )
     comment = models.TextField(
-        null=True, blank=True
+        null=True,
+        blank=True
     )
     date = models.DateTimeField(
-        auto_now_add=True, null=True
+        auto_now_add=True,
+        null=True
     )    
 
     class Meta:

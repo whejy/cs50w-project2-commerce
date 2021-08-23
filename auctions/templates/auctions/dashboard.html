@@ -2,35 +2,45 @@
 
 {% block body %}
 <h2>{{ title }}</h2>
-<br>
+<ul class="no-bullets">
 {% for key, value_list in data.items %}
     {% if value_list %}
-    <h3>{{ key }}</h3>
+    <div class="{{ key }}">
+    <h4 class="dashtitle">{{ key }}</h4>
         {% for listing in value_list %}
-            <a href="{% url 'listing' listing_id=listing.id %}">
-            <h3>{{ listing.title }}</h3>
-            </a>
-            <div class="listing">
+        <li>
+            <div class="listing grid">
+                <div class="grid-itemimg">
                 {% if listing.image %}
-                    <div class="image">
-                        <a href="{% url 'listing' listing_id=listing.id %}">
-                        <img src="{{ listing.image }}">
-                        </a>
+                <a href="{% url 'listing' listing_id=listing.id %}">
+                    <img src="{{ listing.image }}"></a>
+                {% endif %}
+                </div>
+                <div class="grid-itemtext">
+                    <a href="{% url 'listing' listing_id=listing.id %}">
+                        <h3>{{ listing.title }}</h3></a><br>                
+                    <b>{% if key == "Sold" or key == 'Won'%}Final Bid:
+                    {% else %}Current Bid: 
+                    {% endif %}
+                    </b>
+                    ${{ listing.start_bid }}                
+                    <br><br>
+                    {{ listing.description }}
+                    <br>
+                    <div class="footer">
+                        Listed on {{ listing.date }}
                     </div>
-                {% endif %}
-                <b>{% if key == "Sold" or key == 'Won'%}Final Bid:
-                {% else %}Current Bid: 
-                {% endif %}
-                </b>
-                ${{ listing.start_bid }}                
-                <br><br>
-                {{ listing.description }}
-                <br><br>
+                </div>
             </div>
+        </li><br>
         {% endfor %}
+    </div>
     {% endif %}
 {% endfor %}
+</ul>
 {% if message %}
+<div class="center">
     {{ message|safe }}
+</div>
 {% endif %}
 {% endblock %}

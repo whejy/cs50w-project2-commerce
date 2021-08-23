@@ -22,7 +22,9 @@ def bid(request):
         current_bid = bidCheck(listing_id)[0]
         if bid > current_bid:
             new_bid = Bids(
-                user=User(id=request.user.id), item=Listing(id=listing_id), bid=bid
+                user=User(id=request.user.id),
+                item=Listing(id=listing_id),
+                bid=bid
             )
             new_bid.save()
             messages.success(request, "Congratulations, you are the highest bidder!")
@@ -43,12 +45,12 @@ def category(request, category):
     empty = ""
     lst = []
     active_listings = []
-    items = Listing.objects.filter(category=category)
+    items = Listing.objects.filter(category=category).order_by('-date')
     for item in items:
         if not Winners.objects.filter(item=Listing(id=item.id)):
             active_listings.append(item)
     if not active_listings:
-        empty = f"Sorry, there are currently no listings in the '{category}' category."
+        empty = f"<i>Sorry, there are currently no listings in the '{category}' category.</i>"
     else:
         lst = bidUpdate(active_listings)
     return render(request, "auctions/category.html", {
@@ -103,14 +105,12 @@ def dashboard(request):
 
     data = {
         "Winning": winning,
+        "Not Winning": not_winning,
         "Won": won,
-        "Not Winning": not_winning
         }
 
-    if not winning:
-        if not won:
-            if not not_winning:
-                msg = "Get bidding!"
+    if not winning and not won and not not_winning:
+        msg = "<i>Get bidding!</i>"
 
     return render(request, "auctions/dashboard.html", {
         "data": data,
@@ -124,7 +124,7 @@ def index(request):
     active_listings = []
     empty = ""
     listings = Listing.objects.all()
-    items = bidUpdate(listings)    
+    items = bidUpdate(listings.order_by('-date'))    
     # exclude sold items
     for item in items:
         if not Winners.objects.filter(item=Listing(id=item.id)):
@@ -155,10 +155,12 @@ def listing(request, listing_id):
             comment = form.cleaned_data['comment']
             listing_id = request.POST.get("listing_id")
             new_comment = Comments(
-                user=User(id=user), item=Listing(id=listing_id), comment=comment
+                user=User(id=user),
+                item=Listing(id=listing_id),
+                comment=comment
             )
             new_comment.save()
-            messages.success(request, "Comment Added!")
+            messages.success(request, "Comment added!")
         return HttpResponseRedirect(f"listing{listing_id}")
     else:
         msg = ""
@@ -177,10 +179,12 @@ def listing(request, listing_id):
             'bid': STEP + float(current_bid)
         })
         in_watchlist = Watchlist.objects.filter(
-            user=User(id=user), item=Listing(id=listing_id)
+            user=User(id=user),
+            item=Listing(id=listing_id)
         )
         sellers_item = Listing.objects.filter(
-            seller=User(id=user), id=listing_id
+            seller=User(id=user),
+            id=listing_id
         )
 
         try:
@@ -281,7 +285,10 @@ def mylistings(request):
         if winner:
             cost = bidCheck(listing_id)[0]
             won = Winners(
-                owner=seller, item=Listing(id=listing_id), winner=winner, cost=cost
+                owner=seller,
+                item=Listing(id=listing_id),
+                winner=winner,
+                cost=cost
             )
             item.sold = True
             won.save()
@@ -308,11 +315,10 @@ def mylistings(request):
                 sold.append(item)
         active = bidUpdate(active)
         sold = bidUpdate(sold)
-        if not active:
-            if not sold:
-                msg = "Start <a href=/new>selling</a> today!"
+        if not active and not sold:
+            msg = "<i>Start <a href=/new>selling</a> today!</i>"
         data = {
-            "Active Listings": active,
+            "Active": active,
             "Sold": sold
         }
         title = "My Listings"
@@ -344,8 +350,12 @@ def new(request):
                 image="https://us.123rf.com/450wm/pavelstasevich/pavelstasevich1811/pavelstasevich181101028/112815904-no-image-available-icon-flat-vector-illustration.jpg?ver=6"
                 
             new_listing = Listing(
-                seller=User(id=user), title=title, description=description,
-                start_bid=start_bid, image=image, category=category
+                seller=User(id=user),
+                title=title,
+                description=description,
+                start_bid=start_bid,
+                image=image,
+                category=category
             )
             new_listing.save()
             messages.success(request, f"You listed an auction for {title}!")
@@ -394,10 +404,14 @@ def watchlist(request):
         listing_id = request.POST.get("listing_id")
         remove = request.POST.get("remove")
         watchlist = Watchlist(
-            user=User(id=user), item=Listing(id=listing_id))
+            user=User(id=user),
+            item=Listing(id=listing_id)
+            )
         if remove:
             watchlist = Watchlist.objects.filter(
-                user=User(id=user), item=Listing(id=listing_id))
+                user=User(id=user),
+                item=Listing(id=listing_id)
+                )
             watchlist.delete()
         else:
             watchlist.save()
@@ -407,9 +421,13 @@ def watchlist(request):
     # display user's watchlist
         watchlist = Watchlist.objects.filter(user=user)
         watching_lst = []
+        msg = ""
+        if not watching_lst:
+            msg = "<i>Your watchlist is empty.</i>"
         for items in watchlist:
             watching_lst.append(items.item)
         lst = bidUpdate(watching_lst)
         return render(request, "auctions/watchlist.html", {
-            "watchlist": lst
+            "watchlist": lst,
+            "message": msg
         })

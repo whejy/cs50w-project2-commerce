@@ -1,60 +1,61 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-<h3>{{ listing.title }}</h3>
-<div class="listing">
-    {% if listing.image %}
-        <div class="image">
-            <img src="{{ listing.image }}">
-        </div>
-    {% endif %}
-    <b>{{ bid_label }}</b>${{ bid }}
-    <br><br>
-    {{ listing.description }}
-    <br><br>
-    {{ listing.ending }}
-    <br>
-    {% if user.is_authenticated %}
-        {% if not winning %}
-            {% if close %}
-                <form action="{% url 'mylistings' %}" method="POST">
-            {% elif not closed %}
-                <form action="{% url 'bid' %}" method="POST">
-                    {% csrf_token %}
-                    {{form.bid.label_tag}}{{ form.bid }}
-                    <input type="hidden" value="{{ listing.id }}" name="listing_id">
-                    <input type="submit" value="Bid">
-                </form>
-            {% else %}   
-                {{ message }}     
+<div class="listing flex-container">
+    <div class="image flex-child">
+        <h3>{{ listing.title }}</h3><br>
+        <img src="{{ listing.image }}">
+    </div>
+    <div class="details flex-child">
+        <h4>Details</h4><br>
+        {% if listing.ending %}
+            {{ listing.ending }}<br><br>
+        {% endif %}
+        <b>Description: </b>{{ listing.description }}<br><br>        
+        <b>{{ bid_label }}</b>${{ bid }}
+        {% if user.is_authenticated %}
+            {% if not winning %}
+                {% if close %}
+                    <form action="{% url 'mylistings' %}" method="POST">
+                {% elif not closed %}
+                    <br><br><form action="{% url 'bid' %}" method="POST">
+                        {% csrf_token %}
+                        {{form.bid.label_tag}}{{ form.bid }}
+                        <input type="hidden" value="{{ listing.id }}" name="listing_id">
+                        <input type="submit" value="Bid">
+                    </form>
+                {% else %}   
+                    {{ message }}     
+                {% endif %}
+            {% else %}
+                <br><br><i>{{ message }}</i><br>
             {% endif %}
-        {% else %}
-            {{ message }}
-        {% endif %}
-        {% if not closed %}
-            <form action="{% url 'watchlist' %}" method="POST">
-            {% csrf_token %}
-            <input type="hidden" value="{{ listing.id }}" name="listing_id">
-            <input type="hidden" value="{{ remove }}" name="remove">
-            <input type="submit" value="{{ watchlist }}">
-            </form>
-        {% endif %}
-        <br>
-        {% for comment in listing.comments.all %}
-            <b>{{ comment.user }}</b> said...
-            <br>
-            {{ comment.comment }}<br>
-            (<i>{{ comment.date }}</i>)
+            {% if not closed %}
+                <br>        
+                <form action="{% url 'watchlist' %}" method="POST">
+                {% csrf_token %}
+                <input type="hidden" value="{{ listing.id }}" name="listing_id">
+                <input type="hidden" value="{{ remove }}" name="remove">
+                <input type="submit" value="{{ watchlist }}">
+                </form>
+            {% endif %}
             <br><br>
-        {% endfor %}        
-        <form action="{% url 'listing' listing.id %}" method="POST">
-            {% csrf_token %}
-            {{ commentform }}
-            <input type="hidden" value="{{ listing.id }}" name="listing_id">
-            <input type="submit" value="Add Comment">
-        </form>
-    {% else %}
-        {{ message }}     
-    {% endif %}
+            <h4>Comments</h4><br>
+            {% for comment in listing.comments.all %}
+                <b>{{ comment.user }}</b> said...<br>
+                {{ comment.comment }}<br>
+                (<i>{{ comment.date }}</i>)<br><br>
+            {% endfor %}        
+            <form action="{% url 'listing' listing.id %}" method="POST">
+                {% csrf_token %}
+                {{ commentform }}
+                <input type="hidden" value="{{ listing.id }}" name="listing_id">
+                <br>
+                <input type="submit" value="Add Comment">
+            </form>
+        {% else %}
+            <br><br>{{ message }}     
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

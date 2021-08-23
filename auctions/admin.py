@@ -12,6 +12,15 @@ class BidsAdmin(admin.ModelAdmin):
     get_item.short_description = "Item"
 
 
+class CommentsAdmin(admin.ModelAdmin):
+    list_display=('user', 'item_name', 'comment', 'date')
+
+    def item_name(self, obj):
+        return obj.item.title
+    item_name.admin_order_field = 'item'
+    item_name.short_description = "Item"
+
+
 class ListingAdmin(admin.ModelAdmin):
     list_display=('seller', 'item_name', 'start_bid', 'category', 'sold', 'date_name')
 
@@ -25,17 +34,17 @@ class ListingAdmin(admin.ModelAdmin):
 
 
 class WinnersAdmin(admin.ModelAdmin):
-    list_display=('owner', 'winner', 'get_item', 'cost')
+    list_display=('owner', 'winner', 'item_name', 'cost')
 
-    def get_item(self, obj):
+    def item_name(self, obj):
         return obj.item.title
-    get_item.admin_order_field = 'item'
-    get_item.short_description = "Item"
+    item_name.admin_order_field = 'item'
+    item_name.short_description = "Item"
 
 
 admin.site.register(User)
 admin.site.register(Listing, ListingAdmin)
 admin.site.register(Bids, BidsAdmin)
-admin.site.register(Comments)
+admin.site.register(Comments, CommentsAdmin)
 admin.site.register(Watchlist)
 admin.site.register(Winners, WinnersAdmin)

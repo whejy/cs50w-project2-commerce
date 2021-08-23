@@ -2,30 +2,41 @@
 
 {% block body %}
 <h2>My Watchlist</h2>
-{% for listing in watchlist %}
-    <a href="{% url 'listing' listing_id=listing.id %}">
-    <h3>{{ listing.title }}</h3>
-    </a>
-    <div class="listing">
-        {% if listing.image %}
-            <div class="image">
-                <a href="{% url 'listing' listing_id=listing.id %}">
-                <img src="{{ listing.image }}">
-                </a>
+<ul class="no-bullets">
+{% if watchlist %}
+    {% for listing in watchlist %}
+        <li>
+            <div class="listing grid">
+                <div class="grid-itemimg">
+                {% if listing.image %}
+                        <a href="{% url 'listing' listing_id=listing.id %}">
+                        <img src="{{ listing.image }}">
+                        </a>
+                {% endif %}
+                </div>
+                <div class="grid-itemtext">
+                    <a href="{% url 'listing' listing_id=listing.id %}">
+                        <h3>{{ listing.title }}</h3><br>
+                    </a>            
+                <b>Current Bid: </b>${{ listing.start_bid }}
+                <br><br>
+                {{ listing.description }}
+                <br><br>
+                {% if user.is_authenticated %}
+                <form action="{% url 'watchlist' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" value="{{ listing.id }}" name="listing_id">
+                    <input type="hidden" value="present" name="remove">
+                    <input type="submit" value="Remove from Watchlist">
+                </form>
+                {% endif %}
+                </div>        
             </div>
-        {% endif %}
-        <b>Current Bid: </b>${{ listing.start_bid }}
-        <br><br>
-        {{ listing.description }}
-        <br>
-        {% if user.is_authenticated %}
-        <form action="{% url 'watchlist' %}" method="POST">
-            {% csrf_token %}
-            <input type="hidden" value="{{ listing.id }}" name="listing_id">
-            <input type="hidden" value="present" name="remove">
-            <input type="submit" value="Remove from Watchlist">
-        </form>
-        {% endif %}        
+        </li>
+    {% endfor %}
+{% else %}
+    <div class="center">
+        {{ message|safe }}
     </div>
-{% endfor %}
+{% endif %}
 {% endblock %}
