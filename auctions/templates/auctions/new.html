@@ -4,20 +4,20 @@
 <h2>Create Listing</h2>
 <div class="create flex-container">
     <div class="flex-child">
-    <form action="{% url 'new' %}" method="post" id="newlst">
-    {% csrf_token %}
+        <form action="{% url 'new' %}" method="post" id="newlst" autocomplete="off">
+        {% csrf_token %}
         {{ form.title }}<br>
         {{ form.description }}<br>
     </div>
     <div class="create flex-child">
-            {{ form.start_bid.label_tag}} {{ form.start_bid }}
+        {{ form.start_bid.label_tag}} {{ form.start_bid }}
         <h4>Optional:</h4>
-            {{form.image.label_tag}} {{ form.image }}
+        {{form.image.label_tag}} {{ form.image }}
         <select name="category" class="select">
             <option selected="true" disabled="disabled">Category</option>
-        {% for category in categories %}
-            <option value='{{ category }}'>{{ category }}</option>
-        {% endfor %}
+            {% for category in categories %}
+                <option value='{{ category }}'>{{ category }}</option>
+            {% endfor %}
         </select><br><br>
         <input type="submit" value="Create Listing" id="submitnew">
     </div>

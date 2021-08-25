@@ -153,7 +153,7 @@ li > .listing {
 #id_start_bid {
   text-align: center;
   width: 90px;
-  margin-top: 5px;
+  margin-top: 8px;
 }
 
 #id_title {
@@ -167,6 +167,10 @@ li > .listing {
   border: 1px solid grey;
 }
 
+*:focus {
+  outline-color: lightsteelblue;
+}
+
 #submitnew {
   position: relative;
   padding-top: 10px;
@@ -177,4 +181,9 @@ li > .listing {
   border-radius: 5px;
   border: none;
   box-shadow: 1px 1px 8px 1px limegreen;
+}
+
+#submitnew:hover {
+  border: 1px solid limegreen;
+  border-radius: 5px;
 }
