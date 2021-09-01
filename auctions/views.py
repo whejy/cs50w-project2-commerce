@@ -6,6 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from decimal import Decimal
+from datetime import datetime, timezone
 
 from .forms import NewListForm, NewBidForm, NewCommentForm
 from .helpers import bidCheck, bidUpdate, unique
@@ -47,7 +48,7 @@ def category(request, category):
     active_listings = []
     items = Listing.objects.filter(category=category).order_by('-date')
     for item in items:
-        if not Winners.objects.filter(item=Listing(id=item.id)):
+        if not Winners.objects.filter(item=Listing(id=item.id)) and not (item.date < datetime.now(timezone.utc)):
             active_listings.append(item)
     if not active_listings:
         empty = f"<i>Sorry, there are currently no listings in the '{category}' category.</i>"
@@ -70,11 +71,13 @@ def dashboard(request):
     title = "Dashboard"
     user = request.user
     items_won = Winners.objects.filter(
-        winner=user,
+        winner=user
     )
     bidded = Bids.objects.filter(
         user=User(id=user.id)
     )
+    items = Listing.objects.filter(category=category).order_by('-date')
+
     # If auction bidded on, but not won, update bid price and display to user
     if bidded:
         lst = []
@@ -124,13 +127,13 @@ def index(request):
     active_listings = []
     empty = ""
     listings = Listing.objects.all()
-    items = bidUpdate(listings.order_by('-date'))    
-    # exclude sold items
+    items = bidUpdate(listings.order_by('-date'))        
+    # exclude sold and expired items
     for item in items:
-        if not Winners.objects.filter(item=Listing(id=item.id)):
+        if not Winners.objects.filter(item=Listing(id=item.id)) and not (item.date < datetime.now(timezone.utc)):
             active_listings.append(item)
     if not active_listings:
-        empty = "Sorry, there are no active listings at this time."
+        empty = "<i>Sorry, there are no active listings at this time.</i>"
     # notify user of any auctions they have won while logged out
     for items_sold in Winners.objects.all():
         if str(items_sold.winner) == str(request.user):
@@ -169,6 +172,7 @@ def listing(request, listing_id):
         winning = ""
         watchlist = ""
         bid_label = "Current Bid: "
+        listing = Listing.objects.get(id=listing_id)
         current_bid = bidCheck(listing_id)[0]
         # Catch for user accessing invalid listing via URL bar
         if current_bid == None:
@@ -199,7 +203,6 @@ def listing(request, listing_id):
             winner = Winners.objects.get(item=Listing(id=listing_id))
         except Winners.DoesNotExist:
             winner = None
-
         if sellers_item:
             if closed:
                 bid_label = "Final Bid: "
@@ -213,7 +216,7 @@ def listing(request, listing_id):
             remove = "True"
             watchlist = "Remove from Watchlist"
         else:
-            if closed:
+            if closed or (listing.date < datetime.now(timezone.utc)):
                 msg = "Sorry, this auction has ended."
             else:
                 watchlist = "Add to Watchlist" 
@@ -239,7 +242,7 @@ def listing(request, listing_id):
             "commentform": commentForm,
             "bid": current_bid,
             "bid_label": bid_label,
-            "listing": Listing.objects.get(id=listing_id)
+            "listing": listing
         })
 
 
@@ -268,7 +271,7 @@ def logout_view(request):
     return HttpResponseRedirect(reverse("index"))
 
 
-# Display user's selling list and allow sellerr to close listing
+# Display user's selling list and allow seller to close listing
 @login_required(login_url="/login")
 def mylistings(request):
     active = []
