@@ -1,4 +1,42 @@
-from .models import Listing, Bids
+from .models import Listing, Bids, Winners, Watchlist
+from datetime import datetime, timezone
+from django.contrib import messages
+
+
+
+# Determines if a listing's auction duration has expired and updates models
+# accordingly. Also notifies winner of any auctions won.
+def ended(request):
+    items = Listing.objects.all()
+    for item in items:
+        if item.ending == False:
+            winner = bidCheck(item.id)[1]
+            watchlist = Watchlist.objects.filter(item=Listing(id=item.id))
+            if winner:
+                cost = bidCheck(item.id)[0]
+                won = Winners(
+                    owner=item.seller,
+                    item=Listing(id=item.id),
+                    winner=winner,
+                    cost=cost
+                )
+                item.sold = True
+                item.save()
+                won.save()
+            else:
+                item.delete()
+            for row in watchlist:
+                row.delete() 
+    # notify user of any auctions they have won while logged out
+    for items_sold in Winners.objects.all():
+        if str(items_sold.winner) == str(request.user):
+            if items_sold.notified == False:
+                messages.success(request,
+                    f"Congratulations! You won {items_sold.item.title} with a bid of ${items_sold.cost}!"
+                    )
+                items_sold.notified = True
+                items_sold.save()
+    return ""
 
 
 # Determine current highest bid and bidder for a listing

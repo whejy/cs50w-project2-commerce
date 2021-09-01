@@ -50,12 +50,13 @@ class Listing(models.Model):
             tzinfo=None
         )
         end = end_date - todays_date
+        endmsg = ""
         if self.sold is False:
-            if end:
-                endmsg = format_html(f"<b>Auction Ends:</b> {end_date} <i>({end} hours)</i>")
-        else:
-            endmsg = ""
-        return endmsg
+            if end_date > todays_date:
+                endmsg = format_html(f"<b>Auction Ends:</b> {end_date} <div id='timerText'>({end} hours)</div>")
+                return endmsg
+            else:
+                return False
 
 
     def __str__(self):

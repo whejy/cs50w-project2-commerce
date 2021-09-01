@@ -156,6 +156,13 @@ li > .listing {
   margin-top: 8px;
 }
 
+#timerText {
+  display: inline-block;
+  font-size: larger;
+  font-style: italic;
+  color:limegreen;
+}
+
 #id_title {
   text-align: center;
   width: 200px;

@@ -9,7 +9,7 @@ from decimal import Decimal
 from datetime import datetime, timezone
 
 from .forms import NewListForm, NewBidForm, NewCommentForm
-from .helpers import bidCheck, bidUpdate, unique
+from .helpers import ended, bidCheck, bidUpdate, unique
 from .models import User, Listing, Bids, Comments, Watchlist, Winners
 from .settings import STEP, CATEGORIES
 
@@ -48,7 +48,7 @@ def category(request, category):
     active_listings = []
     items = Listing.objects.filter(category=category).order_by('-date')
     for item in items:
-        if not Winners.objects.filter(item=Listing(id=item.id)) and not (item.date < datetime.now(timezone.utc)):
+        if not Winners.objects.filter(item=Listing(id=item.id)) and not (item.date > datetime.now(timezone.utc)):
             active_listings.append(item)
     if not active_listings:
         empty = f"<i>Sorry, there are currently no listings in the '{category}' category.</i>"
@@ -124,25 +124,17 @@ def dashboard(request):
 
 # Displays Active Listings page
 def index(request):
+    ended(request)
     active_listings = []
     empty = ""
     listings = Listing.objects.all()
     items = bidUpdate(listings.order_by('-date'))        
     # exclude sold and expired items
     for item in items:
-        if not Winners.objects.filter(item=Listing(id=item.id)) and not (item.date < datetime.now(timezone.utc)):
+        if not Winners.objects.filter(item=Listing(id=item.id)):
             active_listings.append(item)
     if not active_listings:
         empty = "<i>Sorry, there are no active listings at this time.</i>"
-    # notify user of any auctions they have won while logged out
-    for items_sold in Winners.objects.all():
-        if str(items_sold.winner) == str(request.user):
-            if items_sold.notified == False:
-                messages.success(request,
-                    f"Congratulations! You won {items_sold.item.title} with a bid of ${items_sold.cost}!"
-                    )
-                items_sold.notified = True
-                items_sold.save()
     return render(request, "auctions/index.html", {
         "listings": active_listings,
         "empty": empty
@@ -166,6 +158,7 @@ def listing(request, listing_id):
             messages.success(request, "Comment added!")
         return HttpResponseRedirect(f"listing{listing_id}")
     else:
+        ended(request)
         msg = ""
         remove = ""
         close = ""
@@ -216,7 +209,7 @@ def listing(request, listing_id):
             remove = "True"
             watchlist = "Remove from Watchlist"
         else:
-            if closed or (listing.date < datetime.now(timezone.utc)):
+            if closed:
                 msg = "Sorry, this auction has ended."
             else:
                 watchlist = "Add to Watchlist" 

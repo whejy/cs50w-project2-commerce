@@ -9,7 +9,9 @@
     <div class="details flex-child">
         <h4>Details</h4><br>
         {% if listing.ending %}
+        <div id="timer">
             {{ listing.ending }}<br><br>
+        </div>
         {% endif %}
         <b>Description: </b>{{ listing.description }}<br><br>        
         <b>{{ bid_label }}</b>${{ bid }}
@@ -25,7 +27,7 @@
                         <input type="submit" value="Bid">
                     </form>
                 {% else %}   
-                    {{ message }}     
+                    <br><br><i>{{ message }}</i>   
                 {% endif %}
             {% else %}
                 <br><br><i>{{ message }}</i><br>

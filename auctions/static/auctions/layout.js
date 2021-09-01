@@ -41,4 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+    // Updates countdown timer on listing page
+    setInterval(function(){
+        $("#timer").load(window.location.href + " #timer" );
+  }, 100);
+
 });
