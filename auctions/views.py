@@ -165,7 +165,6 @@ def listing(request, listing_id):
         winning = ""
         watchlist = ""
         bid_label = "Current Bid: "
-        listing = Listing.objects.get(id=listing_id)
         current_bid = bidCheck(listing_id)[0]
         # Catch for user accessing invalid listing via URL bar
         if current_bid == None:
@@ -183,7 +182,10 @@ def listing(request, listing_id):
             seller=User(id=user),
             id=listing_id
         )
-
+        try:
+            listing = Listing.objects.get(id=listing_id)
+        except Listing.DoesNotExist:
+            return HttpResponseRedirect(reverse("index"))
         try:
             high_bidder = User.objects.get(username=bidCheck(listing_id)[1]).id
         except User.DoesNotExist:
