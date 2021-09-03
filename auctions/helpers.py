@@ -36,7 +36,7 @@ def ended(request):
                     )
                 items_sold.notified = True
                 items_sold.save()
-    return ""
+    return False
 
 
 # Determine current highest bid and bidder for a listing

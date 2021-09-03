@@ -128,7 +128,7 @@ def index(request):
     active_listings = []
     empty = ""
     listings = Listing.objects.all()
-    items = bidUpdate(listings.order_by('-date'))        
+    items = bidUpdate(listings.order_by('date'))        
     # exclude sold and expired items
     for item in items:
         if not Winners.objects.filter(item=Listing(id=item.id)):
@@ -219,7 +219,7 @@ def listing(request, listing_id):
             winning = "True"
             if winner:
                 bid_label = "Final Bid: "
-                msg = "Congratulations, you won this auction!"
+                msg = "<div class='winmsg'>Congratulations, you won this auction!</div>"
             else:
                 bid_label = "Your Bid: "
                 msg = "You are the current the highest bidder!"

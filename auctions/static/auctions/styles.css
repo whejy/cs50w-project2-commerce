@@ -156,7 +156,7 @@ li > .listing {
   margin-top: 8px;
 }
 
-#timerText {
+#timerText, .winmsg {
   display: inline-block;
   font-size: larger;
   font-style: italic;
@@ -193,4 +193,8 @@ li > .listing {
 #submitnew:hover {
   border: 1px solid limegreen;
   border-radius: 5px;
+}
+
+#bid {
+  display:inline-block;
 }

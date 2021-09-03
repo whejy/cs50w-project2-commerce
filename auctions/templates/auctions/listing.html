@@ -14,7 +14,7 @@
         </div>
         {% endif %}
         <b>Description: </b>{{ listing.description }}<br><br>        
-        <b>{{ bid_label }}</b>${{ bid }}
+        <b>{{ bid_label }}</b><div id="bid">${{ bid }}</div>
         {% if user.is_authenticated %}
             {% if not winning %}
                 {% if close %}
@@ -30,7 +30,7 @@
                     <br><br><i>{{ message }}</i>   
                 {% endif %}
             {% else %}
-                <br><br><i>{{ message }}</i><br>
+                <br><br><i>{{ message|safe }}</i><br>
             {% endif %}
             {% if not closed %}
                 <br>        
