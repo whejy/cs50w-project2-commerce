@@ -42,23 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Refreshes auction ending time on listing page, alerts winner when
-    // countdown reaches 0
+    // Refreshes auction ending time on listing page
     var timer = document.querySelector('#timer');
-    function stop() {
-        clearInterval(ID);
-      }    
     if (!timer) {
-        stop();
+        clearInterval(ID);
     }
     else {
         var ID = setInterval(function(){
             var timer = document.querySelector('#timer');
             if (!timer.innerHTML) {
-                stop();
                 location.reload();
             }
             $("#timer").load(window.location.href + " #timer" );
-      }, 100);        
-    }    
+      }, 100); 
+    }
 });

@@ -1,6 +1,8 @@
 from .models import Listing, Bids, Winners, Watchlist
 from datetime import datetime, timezone
 from django.contrib import messages
+from django.http import HttpResponseRedirect
+
 
 
 
@@ -26,18 +28,17 @@ def ended(request):
             else:
                 item.delete()
             for row in watchlist:
-                row.delete() 
+                row.delete()
     # notify user of any auctions they have won while logged out
     for items_sold in Winners.objects.all():
-        if str(items_sold.winner) == str(request.user):
+        if str(items_sold.winner) == str(request.user) and items_sold.notified == False:
             if items_sold.notified == False:
-                messages.success(request,
-                    f"Congratulations! You won {items_sold.item.title} with a bid of ${items_sold.cost}!"
-                    )
                 items_sold.notified = True
                 items_sold.save()
+                messages.success(request,
+                    f"Congratulations! You won {items_sold.item.title} with a bid of ${items_sold.cost}!"
+                    )                   
     return False
-
 
 # Determine current highest bid and bidder for a listing
 def bidCheck(listing_id):
