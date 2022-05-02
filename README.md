@@ -27,7 +27,7 @@ Clone repository
 
 ```
 git clone https://github.com/whejy/cs50w-project2-commerce.git
-cd mail
+cd commerce
 ```
 
 Install dependencies
